@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pam Premium Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .glass-header { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        body { background-color: #f8fafc; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="module">
+        import React, { useState, useMemo } from 'https://esm.sh/react@18.2.0';
+        import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
+        import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'https://esm.sh/recharts@2.12.0?deps=react@18.2.0,react-dom@18.2.0';
+        import { Calendar, DollarSign, ArrowLeft, TrendingUp, Activity, LayoutDashboard, ChevronRight, AlertTriangle, Wallet, BedDouble, Percent, BarChart3, Users, Settings, FileText, Download, Sliders, Bell, CreditCard, CheckCircle, Search, User, ChevronDown } from 'https://esm.sh/lucide-react@0.300.0?deps=react@18.2.0';
+
+        // --- DATA SECTION ---
+        const SUMMARY_DATA = [
+          { date: '2026-01-01', tariff: 212236.84, fbNet: 51866.46, taxes: 13205.38, totalColl: 80138,  advance: 6000, excess: 5858.26, occupancy: 95.00, arr: 3723.45, roomsSold: 57, revpar: 3537.28 },
+          { date: '2026-01-02', tariff: 221251.95, fbNet: 37246.15, taxes: 12939.46, totalColl: 66589,  advance: 13984, excess: 4501.86, occupancy: 100.00, arr: 3687.53, roomsSold: 60, revpar: 3687.53 },
+          { date: '2026-01-03', tariff: 215104.98, fbNet: 35426.50, taxes: 12696.10, totalColl: 95164,  advance: 8750, excess: 1385.32, occupancy: 96.66, arr: 3708.70, roomsSold: 58, revpar: 3585.08 },
+          { date: '2026-01-04', tariff: 198711.11, fbNet: 95294.28, taxes: 14700.64, totalColl: 174051, advance: 10745, excess: 3831.42, occupancy: 90.00, arr: 3679.83, roomsSold: 54, revpar: 3311.85 },
+          { date: '2026-01-05', tariff: 189926.41, fbNet: 35650.05, taxes: 13241.04, totalColl: 350956, advance: 28838, excess: 750.13, occupancy: 86.66, arr: 3652.43, roomsSold: 52, revpar: 3165.44 },
+          { date: '2026-01-06', tariff: 172491.88, fbNet: 38507.65, taxes: 10643.68, totalColl: 246874, advance: 30707.58, excess: 1276.93, occupancy: 80.00, arr: 3593.58, roomsSold: 48, revpar: 2874.86 },
+          { date: '2026-01-07', tariff: 201737.80, fbNet: 17795.25, taxes: 10976.84, totalColl: 67223,  advance: 44884, excess: 1326.89, occupancy: 91.66, arr: 3667.96, roomsSold: 55, revpar: 3362.30 },
+          { date: '2026-01-08', tariff: 221202.10, fbNet: 45459.40, taxes: 13401.42, totalColl: 90963, advance: 35795, excess: 2771.64, occupancy: 105.00, arr: 3511.14, roomsSold: 63, revpar: 3686.70 },
+        ];
+
+        const DETAIL_DATA = {
+          '2026-01-01': { financials: [{ desc: 'Tariff', amount: 212236.84, allowance: 0, net: 212236.84 }, { desc: 'F&B Net', amount: 57724.72, allowance: 5858.26, net: 51866.46 }, { desc: 'Other', amount: 3.34, allowance: 0, net: 3.34 }, { desc: 'Taxes', amount: 13205.38, allowance: 0, net: 13205.38 }, { desc: 'Collections', amount: 80138, allowance: 0, net: 80138 }], collections: [{ mode: 'Cash', amount: 19326 }, { mode: 'Credit Card', amount: 35589 }, { mode: 'Company', amount: 25223 }], advance: [{ type: 'Card FOM', amount: 6000 }] },
+          '2026-01-02': { financials: [{ desc: 'Tariff', amount: 221251.95, allowance: 0, net: 221251.95 }, { desc: 'F&B Net', amount: 41747.61, allowance: 4501.46, net: 37246.15 }, { desc: 'Collections', amount: 66589, allowance: 0, net: 66589 }], collections: [{ mode: 'Cash', amount: 10040 }, { mode: 'Credit Card', amount: 8106 }, { mode: 'Company', amount: 47263 }], advance: [{ type: 'Card FOM', amount: 13984 }] },
+          '2026-01-03': { financials: [{ desc: 'Tariff', amount: 215104.98, allowance: 0, net: 215104.98 }, { desc: 'F&B Net', amount: 36811.62, allowance: 1385.12, net: 35426.5 }, { desc: 'Collections', amount: 95164, allowance: 0, net: 95164 }], collections: [{ mode: 'Cash', amount: 9582 }, { mode: 'Credit Card', amount: 48261 }, { mode: 'Company', amount: 37321 }], advance: [{ type: 'Cash FOM', amount: 3500 }, { type: 'Card FOM', amount: 5250 }] },
+          '2026-01-04': { financials: [{ desc: 'Tariff', amount: 198711.11, allowance: 0, net: 198711.11 }, { desc: 'F&B Net', amount: 99125.7, allowance: 3831.42, net: 95294.28 }, { desc: 'Collections', amount: 174051, allowance: 0, net: 174051 }], collections: [{ mode: 'Cash', amount: 4180 }, { mode: 'Credit Card', amount: 39087 }, { mode: 'Company', amount: 101174 }, { mode: 'Bill on Hold', amount: 29610 }], advance: [{ type: 'Cash FOM', amount: 2000 }, { type: 'Card FOM', amount: 8745 }] },
+          '2026-01-05': { financials: [{ desc: 'Tariff', amount: 189926.41, allowance: 0, net: 189926.41 }, { desc: 'F&B Net', amount: 36400.18, allowance: 750.13, net: 35650.05 }, { desc: 'Collections', amount: 350956, allowance: 0, net: 350956 }], collections: [{ mode: 'Cash', amount: 44699 }, { mode: 'Credit Card', amount: 39330 }, { mode: 'Company', amount: 233981 }, { mode: 'Bill on Hold', amount: 32946 }], advance: [{ type: 'Card FOM', amount: 28838 }] },
+          '2026-01-06': { financials: [{ desc: 'Tariff', amount: 172491.88, allowance: 0, net: 172491.88 }, { desc: 'F&B Net', amount: 39784.58, allowance: 1276.93, net: 38507.65 }, { desc: 'Collections', amount: 246874, allowance: 0, net: 246874 }], collections: [{ mode: 'Cash', amount: 7175 }, { mode: 'Credit Card', amount: 18174 }, { mode: 'Company', amount: 197093 }, { mode: 'Bill on Hold', amount: 24432 }], advance: [{ type: 'Cash FOM', amount: 2300 }, { type: 'Card FOM', amount: 28407.58 }] },
+          '2026-01-07': { financials: [{ desc: 'Tariff', amount: 201737.8, allowance: 0, net: 201737.8 }, { desc: 'F&B Net', amount: 19122.14, allowance: 1326.89, net: 17795.25 }, { desc: 'Collections', amount: 67223, allowance: 0, net: 67223 }], collections: [{ mode: 'Cash', amount: 2919 }, { mode: 'Credit Card', amount: 42750 }, { mode: 'Company', amount: 21554 }], advance: [{ type: 'Cash FOM', amount: 166 }, { type: 'Card FOM', amount: 44718 }] },
+          '2026-01-08': { financials: [{ desc: 'Tariff', amount: 221202.10, allowance: 0, net: 221202.10 }, { desc: 'F&B Net', amount: 48230.64, allowance: 2771.24, net: 45459.40 }, { desc: 'Collections', amount: 90963, allowance: 0, net: 90963 }], collections: [{ mode: 'Cash', amount: 22451 }, { mode: 'Credit Card', amount: 34929 }, { mode: 'Company', amount: 31947 }, { mode: 'Bill on Hold', amount: 1636 }], advance: [{ type: 'Cash FOM', amount: 2000 }, { type: 'Card FOM', amount: 33795 }] },
+        };
+
+        const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
+        const formatCompact = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', notation: "compact", maximumFractionDigits: 1 }).format(val);
+
+        const MDCard = ({ title, value, subtext, trend, icon: Icon, colorClass, delay = 0 }) => (
+          React.createElement("div", { className: "bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group h-full animate-fade-up", style: { animationDelay: `${delay}ms` } },
+            React.createElement("div", { className: "relative z-10" },
+              React.createElement("div", { className: "flex items-center mb-3" },
+                React.createElement("div", { className: `p-2.5 rounded-xl mr-3 ${colorClass?.bg} ${colorClass?.text}` }, React.createElement(Icon, { className: "w-5 h-5" })),
+                React.createElement("p", { className: "text-xs font-bold text-slate-500 uppercase tracking-widest" }, title)
+              ),
+              React.createElement("h3", { className: "text-3xl font-extrabold text-slate-800 tracking-tight break-words font-sans" }, value)
+            ),
+            React.createElement("div", { className: "mt-5 flex flex-wrap items-center justify-between gap-2 relative z-10 pt-4 border-t border-slate-50" },
+              React.createElement("span", { className: "text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider bg-slate-50 text-slate-600" }, subtext),
+              trend && React.createElement("div", { className: "flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md whitespace-nowrap" }, React.createElement(TrendingUp, { className: "w-3 h-3 mr-1" }), trend)
+            )
+          )
+        );
+
+        const DashboardOverview = ({ summary, onSelectDate }) => {
+            const totalTariff = summary.reduce((acc, curr) => acc + curr.tariff, 0);
+            const totalCollection = summary.reduce((acc, curr) => acc + curr.totalColl, 0);
+            const daysWithOcc = summary.filter(d => d.occupancy);
+            const avgOccupancy = daysWithOcc.length > 0 ? (daysWithOcc.reduce((acc, curr) => acc + curr.occupancy, 0) / daysWithOcc.length) : 0;
+            const avgARR = daysWithOcc.length > 0 ? (daysWithOcc.reduce((acc, curr) => acc + curr.arr, 0) / daysWithOcc.length) : 0;
+
+            return React.createElement("div", { className: "space-y-8 animate-fade-up px-2" },
+                React.createElement("div", { className: "flex flex-col md:flex-row md:items-end justify-between gap-4" },
+                    React.createElement("div", null,
+                        React.createElement("h2", { className: "text-3xl font-extrabold text-slate-900 tracking-tight" }, "Executive Overview"),
+                        React.createElement("p", { className: "text-slate-500 mt-2 font-medium" }, "Snapshot: ", React.createElement("span", { className: "text-slate-900 font-bold" }, "Jan 01 - Jan 08, 2026"))
+                    ),
+                    React.createElement("button", { onClick: () => onSelectDate(summary[summary.length-1].date), className: "text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2" }, "View Latest Report ", React.createElement(ChevronRight, { className: "w-4 h-4" }))
+                ),
+                React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" },
+                    React.createElement(MDCard, { title: "Room Revenue", value: formatCompact(totalTariff), subtext: "MTD Total", trend: "On Track", icon: Calendar, colorClass: { bg: 'bg-blue-100', text: 'text-blue-600' }, delay: 0 }),
+                    React.createElement(MDCard, { title: "Avg. Room Rate", value: formatCurrency(avgARR), subtext: "MTD Average", trend: `${avgOccupancy.toFixed(1)}% Occ.`, icon: BarChart3, colorClass: { bg: 'bg-indigo-100', text: 'text-indigo-600' }, delay: 100 }),
+                    React.createElement(MDCard, { title: "Total Collection", value: formatCompact(totalCollection), subtext: "Realized Cashflow", icon: DollarSign, colorClass: { bg: 'bg-emerald-100', text: 'text-emerald-600' }, delay: 300 })
+                ),
+                React.createElement("div", { className: "bg-white rounded-2xl shadow-sm border border-slate-200 p-8 hover:shadow-xl transition-all duration-500 animate-fade-up delay-300" },
+                    React.createElement("h3", { className: "text-lg font-bold text-slate-800 mb-8 flex items-center gap-3" }, React.createElement(Activity, { className: "w-5 h-5 text-blue-600" }), "Revenue Trend"),
+                    React.createElement("div", { className: "h-80 w-full" },
+                        React.createElement(ResponsiveContainer, { width: "100%", height: "100%" },
+                            React.createElement(AreaChart, { data: summary, margin: { top: 10, right: 10, left: 0, bottom: 0 } },
+                                React.createElement("defs", null,
+                                    React.createElement("linearGradient", { id: "colorRoom", x1: "0", y1: "0", x2: "0", y2: "1" }, React.createElement("stop", { offset: "5%", stopColor: "#3b82f6", stopOpacity: 0.2 }), React.createElement("stop", { offset: "95%", stopColor: "#3b82f6", stopOpacity: 0 }))
+                                ),
+                                React.createElement(CartesianGrid, { strokeDasharray: "3 3", vertical: false, stroke: "#f1f5f9" }),
+                                React.createElement(XAxis, { dataKey: "date", tickFormatter: (t)=>t.split('-')[2], axisLine: false, tickLine: false, tick: { fill: '#94a3b8', fontSize: 12 }, dy: 10 }),
+                                React.createElement(YAxis, { axisLine: false, tickLine: false, tick: { fill: '#94a3b8', fontSize: 12 }, tickFormatter: (val) => formatCompact(val) }),
+                                React.createElement(Tooltip, { formatter: (val)=>formatCurrency(val) }),
+                                React.createElement(Area, { type: "monotone", dataKey: "tariff", stroke: "#3b82f6", strokeWidth: 4, fillOpacity: 1, fill: "url(#colorRoom)" })
+                            )
+                        )
+                    )
+                )
+            );
+        };
+
+        const DailyView = ({ date, data, onBack }) => {
+            const pieData = data.collections.filter(c => c.amount > 0).map(c => ({ name: c.mode, value: c.amount }));
+            const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+            return React.createElement("div", { className: "space-y-8 animate-fade-up px-2" },
+                React.createElement("div", { className: "flex items-center space-x-4 mb-6" },
+                   React.createElement("button", { onClick: onBack, className: "p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50" }, React.createElement(ArrowLeft, { className: "w-5 h-5 text-slate-600" })),
+                   React.createElement("h2", { className: "text-2xl font-bold text-slate-900" }, "Report: ", date)
+                ),
+                React.createElement("div", { className: "grid grid-cols-1 lg:grid-cols-2 gap-8" },
+                    React.createElement("div", { className: "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" },
+                        React.createElement("div", { className: "px-8 py-5 border-b border-slate-100 bg-slate-50/50" }, React.createElement("h3", { className: "font-bold text-slate-800" }, "Financials")),
+                        React.createElement("table", { className: "w-full text-sm text-left" },
+                            React.createElement("tbody", null, data.financials.map((row, idx) => 
+                                React.createElement("tr", { key: idx, className: "border-b border-slate-50 last:border-0" },
+                                    React.createElement("td", { className: "px-8 py-4 font-medium text-slate-700" }, row.desc),
+                                    React.createElement("td", { className: "px-8 py-4 text-right font-bold text-slate-900" }, formatCurrency(row.net))
+                                )
+                            ))
+                        )
+                    ),
+                    React.createElement("div", { className: "bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col items-center" },
+                         React.createElement("h3", { className: "font-bold text-slate-800 mb-4 w-full text-left" }, "Collection Mix"),
+                         React.createElement("div", { className: "h-64 w-full" },
+                            React.createElement(ResponsiveContainer, null,
+                                React.createElement(PieChart, null,
+                                    React.createElement(Pie, { data: pieData, cx: "50%", cy: "50%", innerRadius: 60, outerRadius: 80, paddingAngle: 5, dataKey: "value" },
+                                        pieData.map((entry, index) => React.createElement(Cell, { key: index, fill: COLORS[index % COLORS.length] }))
+                                    ),
+                                    React.createElement(Tooltip, { formatter: (val) => formatCurrency(val) }),
+                                    React.createElement(Legend, null)
+                                )
+                            )
+                         )
+                    )
+                )
+            );
+        };
+
+        const App = () => {
+            const [selectedDate, setSelectedDate] = useState(null);
+            return React.createElement("div", { className: "min-h-screen pb-12" },
+                React.createElement("nav", { className: "glass-header sticky top-0 z-50 mb-8" },
+                    React.createElement("div", { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex justify-between items-center" },
+                        React.createElement("div", { className: "flex items-center gap-4", onClick: () => setSelectedDate(null) },
+                             React.createElement("div", { className: "bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 rounded-2xl" }, React.createElement(LayoutDashboard, { className: "w-6 h-6 text-white" })),
+                             React.createElement("div", null, React.createElement("h1", { className: "font-extrabold text-white text-xl leading-none" }, "PAM PREMIUM"), React.createElement("p", { className: "text-[11px] text-blue-200 font-medium uppercase tracking-[0.2em] mt-1" }, "Analytics Suite"))
+                        ),
+                        React.createElement("div", { className: "flex items-center gap-3 pl-6 border-l border-white/10" },
+                             React.createElement("div", { className: "text-right hidden xl:block" }, React.createElement("p", { className: "text-sm font-bold text-white" }, "Faizan Patel"), React.createElement("p", { className: "text-xs text-blue-400 font-medium" }, "Managing Director")),
+                             React.createElement("div", { className: "w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center border border-blue-500" }, React.createElement(User, { className: "w-5 h-5 text-white" }))
+                        )
+                    )
+                ),
+                React.createElement("main", { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" },
+                    selectedDate 
+                    ? React.createElement(DailyView, { date: selectedDate, data: DETAIL_DATA[selectedDate], onBack: () => setSelectedDate(null) }) 
+                    : React.createElement(DashboardOverview, { summary: SUMMARY_DATA, onSelectDate: setSelectedDate })
+                )
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>
